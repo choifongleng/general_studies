@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matching Game</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+        
+        .header {
+            flex-shrink: 0;
+            padding: 10px;
+            background-color: #3498db;
+            color: white;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: min(2rem, 5vw);
+            margin: 0;
+        }
+        
+        .game-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 5px;
+            overflow: hidden;
+        }
+        
+        .players-container {
+            display: flex;
+            flex-grow: 1;
+            gap: 10px;
+            min-height: 0;
+        }
+        
+        .player-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background-color: white;
+            padding: 10px;
+            min-width: 0;
+        }
+        
+        .player-title {
+            text-align: center;
+            font-size: min(1.5rem, 4vw);
+            margin-bottom: 5px;
+            padding: 5px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .word-display {
+            text-align: center;
+            font-size: min(2rem, 5vw);
+            font-weight: bold;
+            margin: 5px 0;
+            min-height: min(60px, 10vw);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            word-break: break-word;
+        }
+        
+        .images-grid {
+            flex-grow: 1;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 10px;
+            min-height: 0;
+        }
+        
+        .image-card {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f8f9fa;
+            min-height: 0;
+        }
+        
+        .image-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .image-card img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+        }
+        
+        .image-card.wrong {
+            border-color: #e74c3c;
+            background-color: #ffebee;
+        }
+        
+        .feedback {
+            text-align: center;
+            font-size: min(1.5rem, 4vw);
+            font-weight: bold;
+            min-height: min(40px, 6vw);
+            margin: 5px 0;
+        }
+        
+        .score {
+            text-align: center;
+            font-size: min(1.5rem, 4vw);
+            margin: 5px 0;
+        }
+        
+        .controls {
+            flex-shrink: 0;
+            padding: 10px;
+            text-align: center;
+            background-color: #f8f9fa;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .game-btn {
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            font-size: min(1.2rem, 3vw);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .start-btn {
+            background-color: #2ecc71;
+        }
+        
+        .start-btn:hover {
+            background-color: #27ae60;
+        }
+        
+        .reset-btn {
+            background-color: #e74c3c;
+        }
+        
+        .reset-btn:hover {
+            background-color: #c0392b;
+        }
+        
+        .victory-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            color: white;
+            flex-direction: column;
+            display: none;
+        }
+        
+        .victory-message {
+            font-size: min(3rem, 8vw);
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .play-again-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: min(1.5rem, 4vw);
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        @media (max-width: 768px) {
+            .players-container {
+                flex-direction: column;
+            }
+            
+            .player-section {
+                min-height: 50vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Matching Game</h1>
+    </div>
+    
+    <div class="game-area">
+        <div class="players-container" id="players-container">
+            <div class="player-section" id="player1-section">
+                <div class="player-title">Player 1</div>
+                <div class="word-display" id="player1-word"></div>
+                <div class="images-grid" id="player1-images"></div>
+                <div class="feedback" id="player1-feedback"></div>
+                <div class="score">Score: <span id="player1-score">0</span></div>
+            </div>
+            
+            <div class="player-section" id="player2-section">
+                <div class="player-title">Player 2</div>
+                <div class="word-display" id="player2-word"></div>
+                <div class="images-grid" id="player2-images"></div>
+                <div class="feedback" id="player2-feedback"></div>
+                <div class="score">Score: <span id="player2-score">0</span></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="controls">
+        <button class="game-btn start-btn" id="start-btn">Start Game</button>
+        <button class="game-btn reset-btn" id="reset-btn">Reset Game</button>
+    </div>
+    
+    <div class="victory-overlay" id="victory-overlay">
+        <div class="victory-message" id="victory-message"></div>
+        <button class="play-again-btn" id="play-again-btn">Play Again</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Game elements
+            const startBtn = document.getElementById('start-btn');
+            const resetBtn = document.getElementById('reset-btn');
+            const playAgainBtn = document.getElementById('play-again-btn');
+            const victoryOverlay = document.getElementById('victory-overlay');
+            const victoryMessage = document.getElementById('victory-message');
+            
+            // Player elements
+            const player1Word = document.getElementById('player1-word');
+            const player1Images = document.getElementById('player1-images');
+            const player1Feedback = document.getElementById('player1-feedback');
+            const player1Score = document.getElementById('player1-score');
+            
+            const player2Word = document.getElementById('player2-word');
+            const player2Images = document.getElementById('player2-images');
+            const player2Feedback = document.getElementById('player2-feedback');
+            const player2Score = document.getElementById('player2-score');
+            
+            // Game data - 已增加新配對內容
+            const gameData = [
+                { word: '鹿', image: 'media/deer.png', distractors: ['media/fish.png', 'media/horse.png', 'media/ox.png'] },
+                { word: '魚', image: 'media/fish.png', distractors: ['media/deer.png', 'media/rabbit.png', 'media/horse.png'] },
+                { word: '馬', image: 'media/horse.png', distractors: ['media/deer.png', 'media/fish.png', 'media/ox.png'] },
+                { word: '牛', image: 'media/ox.png', distractors: ['media/deer.png', 'media/rabbit.png', 'media/horse.png'] },
+                { word: '兔', image: 'media/rabbit.png', distractors: ['media/fish.png', 'media/horse.png', 'media/ox.png'] },
+                { word: '羊', image: 'media/sheep.png', distractors: ['media/deer.png', 'media/rabbit.png', 'media/horse.png'] },
+                { word: '鳥', image: 'media/bird.png', distractors: ['media/fish.png', 'media/horse.png', 'media/ox.png'] },
+                { word: '手', image: 'media/hand.png', distractors: ['media/bird.png', 'media/eye.png', 'media/door.png'] },
+                { word: '眼', image: 'media/eye.png', distractors: ['media/hand.png', 'media/door.png', 'media/knife.png'] },
+                { word: '門', image: 'media/door.png', distractors: ['media/eye.png', 'media/knife.png', 'media/bird.png'] },
+                { word: '刀', image: 'media/knife.png', distractors: ['media/hand.png', 'media/eye.png', 'media/door.png'] }
+            ];
+            
+            let gameState = {
+                running: false,
+                round: 0,
+                maxRounds: 5,
+                player1: { correct: 0, score: 0, currentWordData: null },
+                player2: { correct: 0, score: 0, currentWordData: null },
+                usedWords: []
+            };
+            
+            // Event listeners
+            startBtn.addEventListener('click', startGame);
+            resetBtn.addEventListener('click', resetGame);
+            playAgainBtn.addEventListener('click', startGame);
+            
+            function startGame() {
+                // Reset game state
+                gameState = {
+                    running: true,
+                    round: 0,
+                    maxRounds: 5,
+                    player1: { correct: 0, score: 0, currentWordData: null },
+                    player2: { correct: 0, score: 0, currentWordData: null },
+                    usedWords: []
+                };
+                
+                // Reset UI
+                player1Score.textContent = '0';
+                player2Score.textContent = '0';
+                player1Feedback.textContent = '';
+                player2Feedback.textContent = '';
+                victoryOverlay.style.display = 'none';
+                startBtn.disabled = true;
+                
+                // Start first round for both players
+                nextRound('player1');
+                nextRound('player2');
+            }
+            
+            function resetGame() {
+                gameState.running = false;
+                
+                // Clear UI
+                player1Word.textContent = '';
+                player2Word.textContent = '';
+                player1Images.innerHTML = '';
+                player2Images.innerHTML = '';
+                player1Feedback.textContent = '';
+                player2Feedback.textContent = '';
+                player1Score.textContent = '0';
+                player2Score.textContent = '0';
+                victoryOverlay.style.display = 'none';
+                startBtn.disabled = false;
+            }
+            
+            function nextRound(player) {
+                if (!gameState.running) return;
+                
+                // Get unique word for the player
+                const wordData = getRandomWordData();
+                
+                // Store current word data for the player
+                if (player === 'player1') {
+                    gameState.player1.currentWordData = wordData;
+                } else {
+                    gameState.player2.currentWordData = wordData;
+                }
+                
+                // Display word
+                if (player === 'player1') {
+                    player1Word.textContent = wordData.word;
+                    player1Feedback.textContent = '';
+                    createImageOptions(player1Images, wordData, 'player1');
+                } else {
+                    player2Word.textContent = wordData.word;
+                    player2Feedback.textContent = '';
+                    createImageOptions(player2Images, wordData, 'player2');
+                }
+            }
+            
+            function getRandomWordData() {
+                let availableWords = gameData.filter(data => !gameState.usedWords.includes(data.word));
+                if (availableWords.length === 0) {
+                    // If all words have been used, reset used words
+                    gameState.usedWords = [];
+                    availableWords = [...gameData];
+                }
+                
+                const randomIndex = Math.floor(Math.random() * availableWords.length);
+                const wordData = availableWords[randomIndex];
+                gameState.usedWords.push(wordData.word);
+                return wordData;
+            }
+            
+            function createImageOptions(container, wordData, player) {
+                container.innerHTML = '';
+                
+                // Combine correct image with distractors and shuffle
+                const allImages = shuffleArray([wordData.image, ...wordData.distractors]);
+                
+                allImages.forEach(image => {
+                    const imageCard = document.createElement('div');
+                    imageCard.className = 'image-card';
+                    imageCard.dataset.image = image;
+                    imageCard.dataset.correct = (image === wordData.image).toString();
+                    imageCard.dataset.player = player;
+                    
+                    const img = document.createElement('img');
+                    img.src = image;
+                    img.alt = '';
+                    
+                    imageCard.appendChild(img);
+                    imageCard.addEventListener('click', handleImageClick);
+                    
+                    container.appendChild(imageCard);
+                });
+            }
+            
+            function handleImageClick(event) {
+                if (!gameState.running) return;
+                
+                const imageCard = event.currentTarget;
+                const isCorrect = imageCard.dataset.correct === 'true';
+                const player = imageCard.dataset.player;
+                
+                if (player === 'player1') {
+                    if (isCorrect) {
+                        player1Feedback.textContent = 'Good Job!';
+                        player1Feedback.style.color = 'green';
+                        gameState.player1.correct++;
+                        gameState.player1.score += 10;
+                        player1Score.textContent = gameState.player1.score;
+                        
+                        // Move to next round for player1
+                        setTimeout(() => nextRound('player1'), 800);
+                    } else {
+                        imageCard.classList.add('wrong');
+                        player1Feedback.textContent = 'Try again.';
+                        player1Feedback.style.color = 'red';
+                        gameState.player1.score = Math.max(0, gameState.player1.score - 5);
+                        player1Score.textContent = gameState.player1.score;
+                    }
+                } else {
+                    if (isCorrect) {
+                        player2Feedback.textContent = 'Good Job!';
+                        player2Feedback.style.color = 'green';
+                        gameState.player2.correct++;
+                        gameState.player2.score += 10;
+                        player2Score.textContent = gameState.player2.score;
+                        
+                        // Move to next round for player2
+                        setTimeout(() => nextRound('player2'), 800);
+                    } else {
+                        imageCard.classList.add('wrong');
+                        player2Feedback.textContent = 'Try again.';
+                        player2Feedback.style.color = 'red';
+                        gameState.player2.score = Math.max(0, gameState.player2.score - 5);
+                        player2Score.textContent = gameState.player2.score;
+                    }
+                }
+                
+                // Check if game is over (both players have completed maxRounds)
+                if (gameState.player1.correct + gameState.player2.correct >= gameState.maxRounds * 2) {
+                    setTimeout(endGame, 1000);
+                }
+            }
+            
+            function endGame() {
+                gameState.running = false;
+                
+                // Determine winner
+                let message;
+                if (gameState.player1.score > gameState.player2.score) {
+                    message = 'Player 1 Victory!';
+                } else if (gameState.player2.score > gameState.player1.score) {
+                    message = 'Player 2 Victory!';
+                } else {
+                    message = "It's a Tie!";
+                }
+                
+                victoryMessage.textContent = message;
+                victoryOverlay.style.display = 'flex';
+            }
+            
+            function shuffleArray(array) {
+                const newArray = [...array];
+                for (let i = newArray.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+                }
+                return newArray;
+            }
+        });
+    </script>
+</body>
+</html>
